@@ -1,7 +1,12 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { collection, limit, onSnapshot, orderBy, query } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import BranchDivider from "@/components/BranchDivider";
 import DocumentCard from "@/components/DocumentCard";
-import { documentosEjemplo } from "@/lib/data";
+import type { Documento } from "@/lib/types";
 
 const ENLACES = [
   {
@@ -22,6 +27,16 @@ const ENLACES = [
 ];
 
 export default function InicioPage() {
+  const [documentos, setDocumentos] = useState<Documento[]>([]);
+
+  useEffect(() => {
+    const q = query(collection(db, "documentos"), orderBy("fecha", "desc"), limit(3));
+    const unsubscribe = onSnapshot(q, (snap) => {
+      setDocumentos(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Documento)));
+    });
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div>
       <section className="mx-auto max-w-content px-6 pt-16 pb-10">
@@ -59,24 +74,26 @@ export default function InicioPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-content px-6 py-12">
-        <div className="flex items-baseline justify-between mb-6">
-          <h2 className="font-display text-[22px] text-textos-principal">
-            Documentos recientes
-          </h2>
-          <Link
-            href="/documentos"
-            className="text-[14px] font-medium text-institucional hover:text-institucional-claro"
-          >
-            Ver todos →
-          </Link>
-        </div>
-        <div className="grid gap-5 sm:grid-cols-3">
-          {documentosEjemplo.map((doc) => (
-            <DocumentCard key={doc.id} documento={doc} />
-          ))}
-        </div>
-      </section>
+      {documentos.length > 0 && (
+        <section className="mx-auto max-w-content px-6 py-12">
+          <div className="flex items-baseline justify-between mb-6">
+            <h2 className="font-display text-[22px] text-textos-principal">
+              Documentos recientes
+            </h2>
+            <Link
+              href="/documentos"
+              className="text-[14px] font-medium text-institucional hover:text-institucional-claro"
+            >
+              Ver todos →
+            </Link>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-3">
+            {documentos.map((doc) => (
+              <DocumentCard key={doc.id} documento={doc} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

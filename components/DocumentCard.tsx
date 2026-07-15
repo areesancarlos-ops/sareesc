@@ -1,4 +1,4 @@
-import type { Documento } from "@/lib/data";
+import type { Documento } from "@/lib/types";
 
 function formatearFecha(fecha: string) {
   return new Date(fecha).toLocaleDateString("es-CR", {
